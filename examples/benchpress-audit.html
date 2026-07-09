@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frappe Audit Report - benchpress</title>
+<style>
+:root { --bg:#0b1020; --panel:#121a2f; --muted:#94a3b8; --text:#e5e7eb; --line:#24314f; --high:#ef4444; --warn:#f59e0b; --info:#38bdf8; --ok:#22c55e; --pony:#a78bfa; }
+* { box-sizing:border-box; } body { margin:0; background:linear-gradient(135deg,#08111f,#111827 55%,#1e1b4b); color:var(--text); font:14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif; }
+header { padding:32px 40px 18px; border-bottom:1px solid var(--line); background:rgba(11,16,32,.82); position:sticky; top:0; z-index:2; backdrop-filter:blur(10px); }
+h1 { margin:0 0 6px; font-size:28px; } .sub { color:var(--muted); } main { padding:24px 40px 60px; max-width:1400px; margin:auto; }
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0 28px; } .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.18); }
+.card .label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em; } .card .num { font-size:28px; font-weight:800; margin-top:4px; } .card.high .num { color:var(--high); } .card.warn .num { color:var(--warn); } .card.ponytail .num { color:var(--pony); } .card.guest_apis .num { color:var(--ok); }
+section { background:rgba(18,26,47,.86); border:1px solid var(--line); border-radius:18px; padding:18px; margin:18px 0; } h2 { margin:0 0 14px; font-size:20px; } .count { color:var(--muted); font-size:12px; font-weight:600; }
+details { border:1px solid var(--line); border-radius:12px; margin:10px 0; overflow:hidden; background:#0e172a; } summary { cursor:pointer; padding:12px 14px; color:#f8fafc; }
+table { width:100%; border-collapse:collapse; overflow:hidden; } th,td { padding:9px 10px; border-top:1px solid var(--line); text-align:left; vertical-align:top; } th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.06em; background:#111c33; }
+code { color:#c4b5fd; background:#0b1222; padding:2px 5px; border-radius:6px; } .line { white-space:nowrap; color:#93c5fd; } .high td:first-child { border-left:4px solid var(--high); } .warn td:first-child { border-left:4px solid var(--warn); } .info td:first-child { border-left:4px solid var(--info); } .pony td:first-child { border-left:4px solid var(--pony); } .empty { color:var(--muted); }
+.toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; } button { border:1px solid var(--line); background:#17223a; color:var(--text); border-radius:10px; padding:8px 12px; cursor:pointer; } button:hover { background:#1f2d4a; }
+pre { max-height:460px; overflow:auto; background:#020617; border:1px solid var(--line); border-radius:12px; padding:14px; color:#cbd5e1; }
+</style>
+<script>
+function openAll() { document.querySelectorAll('details').forEach(d => d.open = true); }
+function closeAll() { document.querySelectorAll('details').forEach(d => d.open = false); }
+function copyPrompt() {
+  const text = `Use this Frappe audit report to fix issues. Prioritize High findings, then runtime failures, then warnings, then Ponytail simplification findings. Inspect exact file/line before editing. After changes rerun audit + bench tests.`;
+  navigator.clipboard.writeText(text);
+}
+</script>
+</head>
+<body>
+<header>
+  <h1>Frappe Audit Report: <code>benchpress</code></h1>
+  <div class="sub">App path: <code>/home/frappe/frappe-bench/apps/benchpress</code></div>
+  <div class="toolbar"><button onclick="openAll()">Open all</button><button onclick="closeAll()">Close all</button><button onclick="copyPrompt()">Copy AI remediation prompt</button></div>
+</header>
+<main>
+  <div class="cards"><div class='card findings'><div class='label'>Findings</div><div class='num'>104</div></div>
+<div class='card high'><div class='label'>High</div><div class='num'>0</div></div>
+<div class='card warn'><div class='label'>Warn</div><div class='num'>86</div></div>
+<div class='card info'><div class='label'>Info</div><div class='num'>18</div></div>
+<div class='card ponytail'><div class='label'>Ponytail</div><div class='num'>17</div></div>
+<div class='card whitelisted_apis'><div class='label'>Whitelisted Apis</div><div class='num'>28</div></div>
+<div class='card guest_apis'><div class='label'>Guest Apis</div><div class='num'>0</div></div>
+<div class='card doctypes'><div class='label'>Doctypes</div><div class='num'>10</div></div></div>
+
+  <section><h2>Runtime timings</h2><table><thead><tr><th>Target</th><th>OK</th><th>Status</th><th>Avg ms</th><th>Error</th></tr></thead><tbody><tr><td><code>route:/</code></td><td>True</td><td>200</td><td>30.1</td><td></td></tr><tr><td><code>route:/app</code></td><td>True</td><td>200</td><td>38.2</td><td></td></tr></tbody></table></section>
+
+  <section><h2>High findings - fix first</h2><p class='empty'>None.</p></section>
+  <section><h2>Warnings - review before production clean <span class='count'>86</span></h2>
+<details open><summary><code>benchpress/api.py</code> <span class='count'>21</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='warn'><td class='line'>L20</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+<tr class='warn'><td class='line'>L36</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+<tr class='warn'><td class='line'>L85</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: enqueue</td></tr>
+<tr class='warn'><td class='line'>L97</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+<tr class='warn'><td class='line'>L145</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L146</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L171</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L173</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: enqueue</td></tr>
+<tr class='warn'><td class='line'>L212</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+<tr class='warn'><td class='line'>L237</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L242</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L243</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L250</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+<tr class='warn'><td class='line'>L319</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L321</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: enqueue</td></tr>
+<tr class='warn'><td class='line'>L350</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L351</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L356</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L357</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L362</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L363</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/benchpress/doctype/bench_instance/bench_instance.py</code> <span class='count'>4</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='warn'><td class='line'>L43</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: enqueue</td></tr>
+<tr class='warn'><td class='line'>L60</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: enqueue</td></tr>
+<tr class='warn'><td class='line'>L76</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L77</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/benchpress/doctype/database_server/database_server.py</code> <span class='count'>5</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='warn'><td class='line'>L37</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L38</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L45</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: enqueue</td></tr>
+<tr class='warn'><td class='line'>L72</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L73</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/deploy_manager.py</code> <span class='count'>32</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='warn'><td class='line'>L84</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L157</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L158</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L170</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L171</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L183</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L184</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L197</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L198</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L204</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L205</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L280</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L281</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L284</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L295</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L296</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L299</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L320</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L321</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L354</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L355</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L363</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L364</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L371</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L372</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L390</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L391</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L403</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L408</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L412</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L428</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L429</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/diagnostics.py</code> <span class='count'>1</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='warn'><td class='line'>L63</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/install.py</code> <span class='count'>2</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='warn'><td class='line'>L79</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L89</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/mariadb_manager.py</code> <span class='count'>11</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='warn'><td class='line'>L134</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L135</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L159</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L160</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L169</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L170</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L177</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+<tr class='warn'><td class='line'>L201</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L202</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+<tr class='warn'><td class='line'>L330</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+<tr class='warn'><td class='line'>L391</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/patches/create_default_database_server.py</code> <span class='count'>1</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='warn'><td class='line'>L14</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/stats_collector.py</code> <span class='count'>2</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='warn'><td class='line'>L12</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+<tr class='warn'><td class='line'>L38</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/vpn_adapter.py</code> <span class='count'>6</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='warn'><td class='line'>L43</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L66</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L129</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L136</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: ignore_permissions</td></tr>
+<tr class='warn'><td class='line'>L142</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+<tr class='warn'><td class='line'>L160</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: get_all</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/www/frontend.py</code> <span class='count'>1</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='warn'><td class='line'>L12</td><td>warn</td><td>static</td><td>Review Frappe-specific risky pattern: manual_commit</td></tr>
+</tbody></table></details>
+</section>
+  <section><h2>Ponytail findings - simplify/reuse/delete opportunities <span class='count'>17</span></h2>
+<details open><summary><code>benchpress/api.py</code> <span class='count'>13</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='pony'><td class='line'>L18</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers</td></tr>
+<tr class='pony'><td class='line'>L49</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers</td></tr>
+<tr class='pony'><td class='line'>L70</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers</td></tr>
+<tr class='pony'><td class='line'>L76</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.insert / POST /api/resource can often replace simple create_* wrappers</td></tr>
+<tr class='pony'><td class='line'>L95</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers</td></tr>
+<tr class='pony'><td class='line'>L129</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.insert / POST /api/resource can often replace simple create_* wrappers</td></tr>
+<tr class='pony'><td class='line'>L248</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers</td></tr>
+<tr class='pony'><td class='line'>L277</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get_list / /api/resource can often replace simple list wrappers</td></tr>
+<tr class='pony'><td class='line'>L285</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers</td></tr>
+<tr class='pony'><td class='line'>L293</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.insert / POST /api/resource can often replace simple create_* wrappers</td></tr>
+<tr class='pony'><td class='line'>L371</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers</td></tr>
+<tr class='pony'><td class='line'>L380</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers</td></tr>
+<tr class='pony'><td class='line'>L394</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/benchpress/doctype/database_server/database_server.py</code> <span class='count'>1</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='pony'><td class='line'>L77</td><td>info</td><td>ponytail</td><td>Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/deploy_manager.py</code> <span class='count'>1</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='pony'><td class='line'>L223</td><td>info</td><td>ponytail</td><td>Review manual JSON/HTTP helper: Frappe client/resource APIs or requests built-ins may already cover it</td></tr>
+</tbody></table></details>
+<details open><summary><code>benchpress/docker_manager.py</code> <span class='count'>2</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='pony'><td class='line'>L47</td><td>info</td><td>ponytail</td><td>Review manual JSON/HTTP helper: Frappe client/resource APIs or requests built-ins may already cover it</td></tr>
+<tr class='pony'><td class='line'>L89</td><td>info</td><td>ponytail</td><td>Review manual JSON/HTTP helper: Frappe client/resource APIs or requests built-ins may already cover it</td></tr>
+</tbody></table></details>
+</section>
+  <section><h2>Info findings <span class='count'>1</span></h2>
+<details open><summary><code>hooks.py</code> <span class='count'>1</span></summary>
+<table><thead><tr><th>Line</th><th>Severity</th><th>Category</th><th>Message</th></tr></thead><tbody>
+<tr class='info'><td class='line'>L0</td><td>info</td><td>hooks</td><td>No hooks.py found at app root</td></tr>
+</tbody></table></details>
+</section>
+
+  <section><h2>Whitelisted APIs <span class="count">28</span></h2><table><thead><tr><th>API</th><th>File</th><th>Line</th><th>Guest</th></tr></thead><tbody><tr><td><code>benchpress.api.get_labs</code></td><td><code>benchpress/api.py</code></td><td>18</td><td>False</td></tr><tr><td><code>benchpress.api.get_lab</code></td><td><code>benchpress/api.py</code></td><td>49</td><td>False</td></tr><tr><td><code>benchpress.api.get_lab_templates</code></td><td><code>benchpress/api.py</code></td><td>70</td><td>False</td></tr><tr><td><code>benchpress.api.create_lab_from_template</code></td><td><code>benchpress/api.py</code></td><td>76</td><td>False</td></tr><tr><td><code>benchpress.api.build_lab_image</code></td><td><code>benchpress/api.py</code></td><td>83</td><td>False</td></tr><tr><td><code>benchpress.api.get_benches</code></td><td><code>benchpress/api.py</code></td><td>95</td><td>False</td></tr><tr><td><code>benchpress.api.create_bench</code></td><td><code>benchpress/api.py</code></td><td>129</td><td>False</td></tr><tr><td><code>benchpress.api.bench_action</code></td><td><code>benchpress/api.py</code></td><td>184</td><td>False</td></tr><tr><td><code>benchpress.api.get_deploy_logs</code></td><td><code>benchpress/api.py</code></td><td>248</td><td>False</td></tr><tr><td><code>benchpress.api.add_device</code></td><td><code>benchpress/api.py</code></td><td>260</td><td>False</td></tr><tr><td><code>benchpress.api.remove_device</code></td><td><code>benchpress/api.py</code></td><td>268</td><td>False</td></tr><tr><td><code>benchpress.api.list_devices</code></td><td><code>benchpress/api.py</code></td><td>277</td><td>False</td></tr><tr><td><code>benchpress.api.get_device_wg_config</code></td><td><code>benchpress/api.py</code></td><td>285</td><td>False</td></tr><tr><td><code>benchpress.api.create_site</code></td><td><code>benchpress/api.py</code></td><td>293</td><td>False</td></tr><tr><td><code>benchpress.api.get_user_context</code></td><td><code>benchpress/api.py</code></td><td>371</td><td>False</td></tr><tr><td><code>benchpress.api.get_code_server_credentials</code></td><td><code>benchpress/api.py</code></td><td>380</td><td>False</td></tr><tr><td><code>benchpress.api.get_bench_credentials</code></td><td><code>benchpress/api.py</code></td><td>394</td><td>False</td></tr><tr><td><code>benchpress.api.restart_code_server</code></td><td><code>benchpress/api.py</code></td><td>408</td><td>False</td></tr><tr><td><code>benchpress.api.run_diagnostics</code></td><td><code>benchpress/api.py</code></td><td>426</td><td>False</td></tr><tr><td><code>benchpress.benchpress.doctype.bench_instance.bench_instance.enqueue_deploy</code></td><td><code>benchpress/benchpress/doctype/bench_instance/bench_instance.py</code></td><td>42</td><td>False</td></tr><tr><td><code>benchpress.benchpress.doctype.bench_instance.bench_instance.enqueue_stop</code></td><td><code>benchpress/benchpress/doctype/bench_instance/bench_instance.py</code></td><td>52</td><td>False</td></tr><tr><td><code>benchpress.benchpress.doctype.bench_instance.bench_instance.enqueue_redeploy</code></td><td><code>benchpress/benchpress/doctype/bench_instance/bench_instance.py</code></td><td>59</td><td>False</td></tr><tr><td><code>benchpress.benchpress.doctype.bench_instance.bench_instance.enqueue_start</code></td><td><code>benchpress/benchpress/doctype/bench_instance/bench_instance.py</code></td><td>69</td><td>False</td></tr><tr><td><code>benchpress.benchpress.doctype.database_server.database_server.setup_mariadb</code></td><td><code>benchpress/benchpress/doctype/database_server/database_server.py</code></td><td>41</td><td>False</td></tr><tr><td><code>benchpress.benchpress.doctype.database_server.database_server.stop_mariadb</code></td><td><code>benchpress/benchpress/doctype/database_server/database_server.py</code></td><td>54</td><td>False</td></tr><tr><td><code>benchpress.benchpress.doctype.database_server.database_server.start_mariadb</code></td><td><code>benchpress/benchpress/doctype/database_server/database_server.py</code></td><td>61</td><td>False</td></tr><tr><td><code>benchpress.benchpress.doctype.database_server.database_server.retry_setup</code></td><td><code>benchpress/benchpress/doctype/database_server/database_server.py</code></td><td>68</td><td>False</td></tr><tr><td><code>benchpress.benchpress.doctype.database_server.database_server.get_logs</code></td><td><code>benchpress/benchpress/doctype/database_server/database_server.py</code></td><td>77</td><td>False</td></tr></tbody></table></section>
+  <section><h2>DocTypes <span class="count">10</span></h2><table><thead><tr><th>DocType</th><th>File</th><th>Fields</th><th>Permissions</th><th>Submittable</th></tr></thead><tbody><tr><td><code>BenchPress Settings</code></td><td><code>benchpress/benchpress/doctype/benchpress_settings/benchpress_settings.json</code></td><td>11</td><td>2</td><td>False</td></tr><tr><td><code>Bench Site</code></td><td><code>benchpress/benchpress/doctype/bench_site/bench_site.json</code></td><td>8</td><td>3</td><td>False</td></tr><tr><td><code>Bench App</code></td><td><code>benchpress/benchpress/doctype/bench_app/bench_app.json</code></td><td>4</td><td>0</td><td>False</td></tr><tr><td><code>Build Log</code></td><td><code>benchpress/benchpress/doctype/build_log/build_log.json</code></td><td>7</td><td>3</td><td>False</td></tr><tr><td><code>Bench Instance</code></td><td><code>benchpress/benchpress/doctype/bench_instance/bench_instance.json</code></td><td>32</td><td>3</td><td>False</td></tr><tr><td><code>Site App</code></td><td><code>benchpress/benchpress/doctype/site_app/site_app.json</code></td><td>2</td><td>0</td><td>False</td></tr><tr><td><code>Lab App</code></td><td><code>benchpress/benchpress/doctype/lab_app/lab_app.json</code></td><td>4</td><td>0</td><td>False</td></tr><tr><td><code>Lab</code></td><td><code>benchpress/benchpress/doctype/lab/lab.json</code></td><td>23</td><td>3</td><td>False</td></tr><tr><td><code>Database Server</code></td><td><code>benchpress/benchpress/doctype/database_server/database_server.json</code></td><td>20</td><td>2</td><td>False</td></tr><tr><td><code>Deploy Log</code></td><td><code>benchpress/benchpress/doctype/deploy_log/deploy_log.json</code></td><td>5</td><td>3</td><td>False</td></tr></tbody></table></section>
+
+  <section><h2>AI remediation instructions</h2><ol><li>Fix High findings first; they are blockers.</li><li>For each warning, inspect exact file and line before changing anything.</li><li>For Ponytail findings, do not blindly delete code. Check whether Frappe, stdlib, or existing app code already covers the use case.</li><li>After changes, rerun audit, runtime checks, and <code>bench --site &lt;site&gt; run-tests --app &lt;app&gt; --failfast</code>.</li></ol></section>
+
+  <section><details><summary>Raw JSON report</summary><pre>{
+  &quot;app&quot;: &quot;benchpress&quot;,
+  &quot;app_path&quot;: &quot;/home/frappe/frappe-bench/apps/benchpress&quot;,
+  &quot;summary&quot;: {
+    &quot;findings&quot;: 104,
+    &quot;high&quot;: 0,
+    &quot;warn&quot;: 86,
+    &quot;info&quot;: 18,
+    &quot;ponytail&quot;: 17,
+    &quot;whitelisted_apis&quot;: 28,
+    &quot;guest_apis&quot;: 0,
+    &quot;doctypes&quot;: 10
+  },
+  &quot;findings&quot;: [
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 157,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 170,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 183,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 197,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 204,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 280,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 295,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 320,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 354,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 363,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 371,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 390,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 428,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 84,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 158,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 171,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 184,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 198,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 205,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 281,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 284,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 296,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 299,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 321,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 355,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 364,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 372,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 391,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 403,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 408,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 412,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 429,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 145,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 242,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 350,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 356,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 362,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 146,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 171,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 237,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 243,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 319,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 351,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 357,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 363,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 85,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: enqueue&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 173,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: enqueue&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 321,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: enqueue&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 20,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 36,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 97,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 212,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 250,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/stats_collector.py&quot;,
+      &quot;line&quot;: 38,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/stats_collector.py&quot;,
+      &quot;line&quot;: 12,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/vpn_adapter.py&quot;,
+      &quot;line&quot;: 43,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/vpn_adapter.py&quot;,
+      &quot;line&quot;: 66,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/vpn_adapter.py&quot;,
+      &quot;line&quot;: 129,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/vpn_adapter.py&quot;,
+      &quot;line&quot;: 136,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/vpn_adapter.py&quot;,
+      &quot;line&quot;: 142,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/vpn_adapter.py&quot;,
+      &quot;line&quot;: 160,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/install.py&quot;,
+      &quot;line&quot;: 79,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/install.py&quot;,
+      &quot;line&quot;: 89,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/diagnostics.py&quot;,
+      &quot;line&quot;: 63,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/mariadb_manager.py&quot;,
+      &quot;line&quot;: 134,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/mariadb_manager.py&quot;,
+      &quot;line&quot;: 159,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/mariadb_manager.py&quot;,
+      &quot;line&quot;: 169,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/mariadb_manager.py&quot;,
+      &quot;line&quot;: 201,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/mariadb_manager.py&quot;,
+      &quot;line&quot;: 135,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/mariadb_manager.py&quot;,
+      &quot;line&quot;: 160,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/mariadb_manager.py&quot;,
+      &quot;line&quot;: 170,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/mariadb_manager.py&quot;,
+      &quot;line&quot;: 202,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/mariadb_manager.py&quot;,
+      &quot;line&quot;: 177,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/mariadb_manager.py&quot;,
+      &quot;line&quot;: 330,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/mariadb_manager.py&quot;,
+      &quot;line&quot;: 391,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: get_all&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/bench_instance/bench_instance.py&quot;,
+      &quot;line&quot;: 76,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/bench_instance/bench_instance.py&quot;,
+      &quot;line&quot;: 77,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/bench_instance/bench_instance.py&quot;,
+      &quot;line&quot;: 43,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: enqueue&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/bench_instance/bench_instance.py&quot;,
+      &quot;line&quot;: 60,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: enqueue&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.py&quot;,
+      &quot;line&quot;: 37,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.py&quot;,
+      &quot;line&quot;: 72,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.py&quot;,
+      &quot;line&quot;: 38,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.py&quot;,
+      &quot;line&quot;: 73,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.py&quot;,
+      &quot;line&quot;: 45,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: enqueue&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/patches/create_default_database_server.py&quot;,
+      &quot;line&quot;: 14,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: ignore_permissions&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;warn&quot;,
+      &quot;category&quot;: &quot;static&quot;,
+      &quot;file&quot;: &quot;benchpress/www/frontend.py&quot;,
+      &quot;line&quot;: 12,
+      &quot;message&quot;: &quot;Review Frappe-specific risky pattern: manual_commit&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 18,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 49,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 70,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 76,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.insert / POST /api/resource can often replace simple create_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 95,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 129,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.insert / POST /api/resource can often replace simple create_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 248,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 277,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get_list / /api/resource can often replace simple list wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 285,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 293,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.insert / POST /api/resource can often replace simple create_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 371,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 380,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 394,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.py&quot;,
+      &quot;line&quot;: 77,
+      &quot;message&quot;: &quot;Check if this API can reuse standard Frappe CRUD before custom code: frappe.client.get / /api/resource can often replace simple get_* wrappers&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;hooks&quot;,
+      &quot;file&quot;: &quot;hooks.py&quot;,
+      &quot;line&quot;: 0,
+      &quot;message&quot;: &quot;No hooks.py found at app root&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/deploy_manager.py&quot;,
+      &quot;line&quot;: 223,
+      &quot;message&quot;: &quot;Review manual JSON/HTTP helper: Frappe client/resource APIs or requests built-ins may already cover it&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/docker_manager.py&quot;,
+      &quot;line&quot;: 47,
+      &quot;message&quot;: &quot;Review manual JSON/HTTP helper: Frappe client/resource APIs or requests built-ins may already cover it&quot;
+    },
+    {
+      &quot;severity&quot;: &quot;info&quot;,
+      &quot;category&quot;: &quot;ponytail&quot;,
+      &quot;file&quot;: &quot;benchpress/docker_manager.py&quot;,
+      &quot;line&quot;: 89,
+      &quot;message&quot;: &quot;Review manual JSON/HTTP helper: Frappe client/resource APIs or requests built-ins may already cover it&quot;
+    }
+  ],
+  &quot;whitelisted_apis&quot;: [
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 18,
+      &quot;name&quot;: &quot;get_labs&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.get_labs&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 49,
+      &quot;name&quot;: &quot;get_lab&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.get_lab&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 70,
+      &quot;name&quot;: &quot;get_lab_templates&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.get_lab_templates&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 76,
+      &quot;name&quot;: &quot;create_lab_from_template&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.create_lab_from_template&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 83,
+      &quot;name&quot;: &quot;build_lab_image&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.build_lab_image&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 95,
+      &quot;name&quot;: &quot;get_benches&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.get_benches&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 129,
+      &quot;name&quot;: &quot;create_bench&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.create_bench&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 184,
+      &quot;name&quot;: &quot;bench_action&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.bench_action&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 248,
+      &quot;name&quot;: &quot;get_deploy_logs&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.get_deploy_logs&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 260,
+      &quot;name&quot;: &quot;add_device&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.add_device&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 268,
+      &quot;name&quot;: &quot;remove_device&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.remove_device&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 277,
+      &quot;name&quot;: &quot;list_devices&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.list_devices&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 285,
+      &quot;name&quot;: &quot;get_device_wg_config&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.get_device_wg_config&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 293,
+      &quot;name&quot;: &quot;create_site&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.create_site&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 371,
+      &quot;name&quot;: &quot;get_user_context&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.get_user_context&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 380,
+      &quot;name&quot;: &quot;get_code_server_credentials&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.get_code_server_credentials&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 394,
+      &quot;name&quot;: &quot;get_bench_credentials&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.get_bench_credentials&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 408,
+      &quot;name&quot;: &quot;restart_code_server&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.restart_code_server&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/api.py&quot;,
+      &quot;line&quot;: 426,
+      &quot;name&quot;: &quot;run_diagnostics&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.api.run_diagnostics&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/bench_instance/bench_instance.py&quot;,
+      &quot;line&quot;: 42,
+      &quot;name&quot;: &quot;enqueue_deploy&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.benchpress.doctype.bench_instance.bench_instance.enqueue_deploy&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/bench_instance/bench_instance.py&quot;,
+      &quot;line&quot;: 52,
+      &quot;name&quot;: &quot;enqueue_stop&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.benchpress.doctype.bench_instance.bench_instance.enqueue_stop&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/bench_instance/bench_instance.py&quot;,
+      &quot;line&quot;: 59,
+      &quot;name&quot;: &quot;enqueue_redeploy&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.benchpress.doctype.bench_instance.bench_instance.enqueue_redeploy&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/bench_instance/bench_instance.py&quot;,
+      &quot;line&quot;: 69,
+      &quot;name&quot;: &quot;enqueue_start&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.benchpress.doctype.bench_instance.bench_instance.enqueue_start&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.py&quot;,
+      &quot;line&quot;: 41,
+      &quot;name&quot;: &quot;setup_mariadb&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.benchpress.doctype.database_server.database_server.setup_mariadb&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.py&quot;,
+      &quot;line&quot;: 54,
+      &quot;name&quot;: &quot;stop_mariadb&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.benchpress.doctype.database_server.database_server.stop_mariadb&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.py&quot;,
+      &quot;line&quot;: 61,
+      &quot;name&quot;: &quot;start_mariadb&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.benchpress.doctype.database_server.database_server.start_mariadb&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.py&quot;,
+      &quot;line&quot;: 68,
+      &quot;name&quot;: &quot;retry_setup&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.benchpress.doctype.database_server.database_server.retry_setup&quot;,
+      &quot;allow_guest&quot;: false
+    },
+    {
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.py&quot;,
+      &quot;line&quot;: 77,
+      &quot;name&quot;: &quot;get_logs&quot;,
+      &quot;endpoint_suffix&quot;: &quot;benchpress.benchpress.doctype.database_server.database_server.get_logs&quot;,
+      &quot;allow_guest&quot;: false
+    }
+  ],
+  &quot;doctypes&quot;: [
+    {
+      &quot;name&quot;: &quot;BenchPress Settings&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/benchpress_settings/benchpress_settings.json&quot;,
+      &quot;field_count&quot;: 11,
+      &quot;permission_count&quot;: 2,
+      &quot;is_submittable&quot;: false,
+      &quot;autoname&quot;: null
+    },
+    {
+      &quot;name&quot;: &quot;Bench Site&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/bench_site/bench_site.json&quot;,
+      &quot;field_count&quot;: 8,
+      &quot;permission_count&quot;: 3,
+      &quot;is_submittable&quot;: false,
+      &quot;autoname&quot;: null
+    },
+    {
+      &quot;name&quot;: &quot;Bench App&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/bench_app/bench_app.json&quot;,
+      &quot;field_count&quot;: 4,
+      &quot;permission_count&quot;: 0,
+      &quot;is_submittable&quot;: false,
+      &quot;autoname&quot;: null
+    },
+    {
+      &quot;name&quot;: &quot;Build Log&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/build_log/build_log.json&quot;,
+      &quot;field_count&quot;: 7,
+      &quot;permission_count&quot;: 3,
+      &quot;is_submittable&quot;: false,
+      &quot;autoname&quot;: null
+    },
+    {
+      &quot;name&quot;: &quot;Bench Instance&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/bench_instance/bench_instance.json&quot;,
+      &quot;field_count&quot;: 32,
+      &quot;permission_count&quot;: 3,
+      &quot;is_submittable&quot;: false,
+      &quot;autoname&quot;: null
+    },
+    {
+      &quot;name&quot;: &quot;Site App&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/site_app/site_app.json&quot;,
+      &quot;field_count&quot;: 2,
+      &quot;permission_count&quot;: 0,
+      &quot;is_submittable&quot;: false,
+      &quot;autoname&quot;: null
+    },
+    {
+      &quot;name&quot;: &quot;Lab App&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/lab_app/lab_app.json&quot;,
+      &quot;field_count&quot;: 4,
+      &quot;permission_count&quot;: 0,
+      &quot;is_submittable&quot;: false,
+      &quot;autoname&quot;: null
+    },
+    {
+      &quot;name&quot;: &quot;Lab&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/lab/lab.json&quot;,
+      &quot;field_count&quot;: 23,
+      &quot;permission_count&quot;: 3,
+      &quot;is_submittable&quot;: false,
+      &quot;autoname&quot;: &quot;field:lab_id&quot;
+    },
+    {
+      &quot;name&quot;: &quot;Database Server&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/database_server/database_server.json&quot;,
+      &quot;field_count&quot;: 20,
+      &quot;permission_count&quot;: 2,
+      &quot;is_submittable&quot;: false,
+      &quot;autoname&quot;: &quot;hash&quot;
+    },
+    {
+      &quot;name&quot;: &quot;Deploy Log&quot;,
+      &quot;file&quot;: &quot;benchpress/benchpress/doctype/deploy_log/deploy_log.json&quot;,
+      &quot;field_count&quot;: 5,
+      &quot;permission_count&quot;: 3,
+      &quot;is_submittable&quot;: false,
+      &quot;autoname&quot;: null
+    }
+  ],
+  &quot;hooks&quot;: {
+    &quot;exists&quot;: false,
+    &quot;doc_events&quot;: false,
+    &quot;scheduler_events&quot;: false,
+    &quot;override_whitelisted_methods&quot;: false,
+    &quot;override_doctype_class&quot;: false,
+    &quot;fixtures&quot;: false
+  },
+  &quot;bench_results&quot;: [],
+  &quot;timings&quot;: [
+    {
+      &quot;target&quot;: &quot;route:/&quot;,
+      &quot;ok&quot;: true,
+      &quot;status_code&quot;: 200,
+      &quot;elapsed_ms&quot;: 30.101140667587362,
+      &quot;error&quot;: null
+    },
+    {
+      &quot;target&quot;: &quot;route:/app&quot;,
+      &quot;ok&quot;: true,
+      &quot;status_code&quot;: 200,
+      &quot;elapsed_ms&quot;: 38.20905866693162,
+      &quot;error&quot;: null
+    }
+  ]
+}</pre></details></section>
+</main>
+</body>
+</html>

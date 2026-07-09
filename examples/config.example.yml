@@ -1,0 +1,18 @@
+# Example config for documenting a Frappe Testing Loop run.
+# The current CLI is flag-based; this file shows the values you typically pass.
+
+bench: /home/frappe/frappe-bench
+app: benchpress
+site: frontend
+base_url: http://benchpress_frontend:8080
+routes:
+  - /
+  - /app
+endpoints:
+  - benchpress.api.get_labs
+  - benchpress.api.get_benches
+  - benchpress.api.get_lab_templates
+repeat: 3
+outputs:
+  json: /tmp/benchpress-audit.json
+  html: /tmp/benchpress-audit.html

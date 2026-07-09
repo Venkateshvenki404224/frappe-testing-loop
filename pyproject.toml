@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "frappe-testing-loop"
+version = "0.1.0"
+description = "Static, runtime, Ponytail, and HTML audit loop for Frappe apps"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+  {name = "M Venkatesh"}
+]
+keywords = ["frappe", "erpnext", "testing", "audit", "devops", "html-report"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Software Development :: Testing",
+]
+dependencies = []
+
+[project.scripts]
+frappe-testing-loop = "frappe_testing_loop.audit:main"
+frappe-audit = "frappe_testing_loop.audit:main"
+
+[tool.setuptools]
+packages = ["frappe_testing_loop"]
