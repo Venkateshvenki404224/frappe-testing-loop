@@ -102,7 +102,7 @@ def main() -> int:
         "hooks": hooks,
         "bench_results": bench_results,
         "timings": [asdict(x) for x in timings],
-        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "report_dir": str(auto_report_dir) if auto_report_dir else None,
     }
     report["score"] = compute_score(report)
