@@ -25,9 +25,9 @@ Inspired by Dietrich Gebert's Ponytail discipline: before writing more code, che
 
 It flags review points like:
 
-- custom `get_*`, `list_*`, `create_*`, `delete_*` APIs that may be replaceable by Frappe's standard REST/resource APIs
-- custom cache/retry/HTTP/JSON helpers
+- concrete over-engineering signals such as custom cache/retry/HTTP/JSON helpers
 - large files that might need splitting
+- whitelisted API inventory so humans can separately decide whether a method duplicates Frappe's standard REST/resource APIs
 - vague `ponytail:` debt comments without revisit triggers
 
 Ponytail findings are not automatic failures. They are simplification prompts.

@@ -6,9 +6,29 @@ import unittest
 from pathlib import Path
 
 from frappe_testing_loop.audit import compute_score, Finding, Timing, append_results_history, build_issue_body, write_reports_index
+from frappe_testing_loop.scanners import whitelist_functions
 
 
 class ScoreHistoryTests(unittest.TestCase):
+    def test_whitelisted_crud_style_names_are_not_ponytail_by_name_alone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            app_path = Path(tmp) / "sample_app"
+            app_path.mkdir()
+            (app_path / "api.py").write_text(
+                "import frappe\n\n"
+                "@frappe.whitelist()\n"
+                "def get_lab_templates():\n"
+                "    return []\n\n"
+                "@frappe.whitelist()\n"
+                "def create_lab():\n"
+                "    return {}\n"
+            )
+
+            apis, findings = whitelist_functions(app_path)
+
+            self.assertEqual({api["name"] for api in apis}, {"get_lab_templates", "create_lab"})
+            self.assertFalse([f for f in findings if f.category == "ponytail"])
+
     def test_compute_score_weights_hard_failures_warnings_and_ponytail(self):
         report = {
             "summary": {"guest_apis": 2},

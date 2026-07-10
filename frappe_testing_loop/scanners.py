@@ -32,18 +32,6 @@ PONYTAIL_PATTERNS = {
     "ponytail_debt": re.compile(r"(#|//)\s*ponytail:\s*(.+)", re.I),
 }
 
-STANDARD_FRAPPE_API_HINTS = {
-    "get": "frappe.client.get / /api/resource can often replace simple get_* wrappers",
-    "get_list": "frappe.client.get_list / /api/resource can often replace simple list wrappers",
-    "list": "frappe.client.get_list / /api/resource can often replace simple list wrappers",
-    "create": "frappe.client.insert / POST /api/resource can often replace simple create_* wrappers",
-    "insert": "frappe.client.insert / POST /api/resource can often replace simple insert wrappers",
-    "update": "frappe.client.save / PUT /api/resource can often replace simple update_* wrappers",
-    "save": "frappe.client.save / PUT /api/resource can often replace simple save wrappers",
-    "delete": "frappe.client.delete / DELETE /api/resource can often replace simple delete wrappers",
-}
-
-
 def scan_patterns(app_path: Path, include_tests: bool = False) -> list[Finding]:
     findings: list[Finding] = []
     for path in iter_files(app_path, (".py",)):
@@ -93,12 +81,8 @@ def whitelist_functions(app_path: Path, include_tests: bool = False) -> tuple[li
                     apis.append(api)
                     by_name.setdefault(node.name, []).append(f"{rel}:{node.lineno}")
                     by_dotted.setdefault(dotted, []).append(f"{rel}:{node.lineno}")
-                    lower_name = node.name.lower()
-                    verb = lower_name.split("_", 1)[0]
-                    if verb in STANDARD_FRAPPE_API_HINTS:
-                        findings.append(Finding("info", "ponytail", rel, node.lineno, f"Check if this API can reuse standard Frappe CRUD before custom code: {STANDARD_FRAPPE_API_HINTS[verb]}"))
                     if allow_guest:
-                        findings.append(Finding("warn", "ponytail", rel, node.lineno, "Guest API: Ponytail does not simplify security; verify this must be public"))
+                        findings.append(Finding("warn", "api", rel, node.lineno, "Guest API: verify this whitelisted method must be public and has safe permission/data handling"))
     for name, locs in by_name.items():
         if len(locs) > 1:
             findings.append(Finding("warn", "api", locs[0].split(":")[0], int(locs[0].split(":")[1]), f"Duplicate whitelisted function name '{name}' at {', '.join(locs)}"))

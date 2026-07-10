@@ -14,7 +14,7 @@
 - `frappe.db.commit()`: manual transaction control. Verify it does not break rollback semantics.
 - `frappe.db.sql()`: verify parameters, permissions, query plan, and whether Query Builder/ORM can replace it.
 - broad `except Exception`: verify errors are not hidden and logs include enough context.
-- custom `get_*`, `list_*`, `create_*`, `delete_*`: check whether standard `/api/resource` or `frappe.client.*` already covers the use case.
+- Whitelisted APIs: check whether the endpoint exists for custom business logic, permission shaping, or compatibility. Do **not** rename/remove a method just because it starts with `get_`, `list_`, `create_`, `update_`, or `delete_`; Frappe allows whitelisted dotted methods with normal Python names.
 
 ## Fix loop checklist
 
