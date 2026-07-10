@@ -357,7 +357,16 @@ If `--json`, `--md`, and `--html` are all omitted, the CLI automatically writes 
 
 ```text
 frappe-testing-loop/
-├── frappe_testing_loop/        # Python audit CLI
+├── frappe_testing_loop/        # Python audit package
+│   ├── audit.py                # Backward-compatible CLI wrapper
+│   ├── cli.py                  # Argument parsing and orchestration
+│   ├── scanners.py             # Static Frappe/Ponytail scanners
+│   ├── runners.py              # Bench and HTTP runtime checks
+│   ├── scoring.py              # Quality score and results.tsv history
+│   ├── reports.py              # Markdown/HTML report writers
+│   ├── alerts.py               # issue.md and GitHub issue publishing
+│   ├── models.py               # Shared dataclasses
+│   └── utils.py                # Shared filesystem/string helpers
 ├── skills/                     # Canonical Agent Skill package
 ├── .claude/skills/             # Claude Code project skill
 ├── .agents/skills/             # Codex repository skill
