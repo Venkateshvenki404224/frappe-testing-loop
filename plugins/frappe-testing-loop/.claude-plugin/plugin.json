@@ -1,0 +1,6 @@
+{
+  "name": "frappe-testing-loop",
+  "version": "0.1.0",
+  "description": "Claude Code plugin packaging the Frappe Testing Loop agent skill for Frappe/ERPNext audits.",
+  "skills": "./skills/"
+}

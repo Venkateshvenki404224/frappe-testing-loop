@@ -1,0 +1,6 @@
+{
+  "name": "frappe-testing-loop",
+  "version": "0.1.0",
+  "description": "Agent skill for auditing Frappe and ERPNext apps with HTML/JSON reports and an audit-fix-verify loop.",
+  "skills": "./skills/"
+}

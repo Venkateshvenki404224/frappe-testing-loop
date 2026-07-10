@@ -70,6 +70,19 @@ bench --site <site> run-tests --app <app> --failfast
 bench --site <site> migrate
 ```
 
+## Agent integrations
+
+Frappe Testing Loop is now packaged for AI coding agents as well as humans:
+
+- **Claude Code skill:** `.claude/skills/frappe-testing-loop/SKILL.md`
+- **Codex skill:** `.agents/skills/frappe-testing-loop/SKILL.md`
+- **Canonical Agent Skill:** `skills/frappe-testing-loop/SKILL.md`
+- **Claude/Codex plugin manifests:** `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`
+- **Distributable plugin folder:** `plugins/frappe-testing-loop/`
+- **Generic agent instructions:** `AGENTS.md`
+
+See [`docs/agent-integrations.md`](docs/agent-integrations.md) for installation and usage details.
+
 ## Install
 
 ### Run directly from source
