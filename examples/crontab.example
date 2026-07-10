@@ -1,0 +1,18 @@
+# Frappe Testing Loop cron examples
+#
+# Install with:
+#   crontab -e
+#
+# Cron has a minimal environment. Use absolute paths and export variables inline.
+
+# Daily static audit at 08:00 server time
+0 8 * * * cd /path/to/frappe-testing-loop && BENCH_PATH=/home/frappe/frappe-bench APP_NAME=my_app SITE_NAME=mysite.localhost REPORTS_DIR=/home/frappe/frappe-testing-loop-reports /path/to/frappe-testing-loop/scripts/run_daily_audit.sh
+
+# Daily runtime audit with route checks at 08:30 server time
+30 8 * * * cd /path/to/frappe-testing-loop && BENCH_PATH=/home/frappe/frappe-bench APP_NAME=my_app SITE_NAME=mysite.localhost BASE_URL=http://localhost:8000 ROUTES="/ /app" REPORTS_DIR=/home/frappe/frappe-testing-loop-reports /path/to/frappe-testing-loop/scripts/run_daily_audit.sh
+
+# Daily audit with GitHub issue publishing. Requires `gh auth login` for the cron user.
+0 9 * * * cd /path/to/frappe-testing-loop && BENCH_PATH=/home/frappe/frappe-bench APP_NAME=my_app SITE_NAME=mysite.localhost BASE_URL=http://localhost:8000 GITHUB_ISSUE=1 GITHUB_REPO=owner/repo REPORTS_DIR=/home/frappe/frappe-testing-loop-reports /path/to/frappe-testing-loop/scripts/run_daily_audit.sh
+
+# Daily audit with native Frappe bench tests. Use only when safe for this environment.
+0 10 * * * cd /path/to/frappe-testing-loop && BENCH_PATH=/home/frappe/frappe-bench APP_NAME=my_app SITE_NAME=mysite.localhost RUN_BENCH=1 REPORTS_DIR=/home/frappe/frappe-testing-loop-reports /path/to/frappe-testing-loop/scripts/run_daily_audit.sh

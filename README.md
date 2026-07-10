@@ -135,10 +135,11 @@ review.md    # Markdown review notes
 issue.md     # GitHub-ready alert body, only when status is fail/review
 ```
 
-The parent `reports/` folder also gets an ignored append-only history file:
+The parent `reports/` folder also gets an ignored append-only history file and dashboard:
 
 ```text
 results.tsv  # timestamp, app, run_dir, score, status, finding counts
+index.html   # browser dashboard across all runs, with score trend and links
 ```
 
 Open the latest HTML report:
@@ -172,6 +173,30 @@ Behavior:
 - If that issue already exists, the loop comments on it instead of creating duplicate daily issues.
 
 Use `--attention-file /path/to/issue.md` to write the alert body somewhere specific without GitHub. Use `--github-dry-run` to verify the issue payload without calling `gh`.
+
+### Cron runner template
+
+Use the included script template for daily automation:
+
+```bash
+cp scripts/run_daily_audit.sh /opt/frappe-testing-loop/run_daily_audit.sh
+chmod +x /opt/frappe-testing-loop/run_daily_audit.sh
+
+BENCH_PATH=/home/frappe/frappe-bench \
+APP_NAME=my_app \
+SITE_NAME=mysite.localhost \
+BASE_URL=http://localhost:8000 \
+REPORTS_DIR=/home/frappe/frappe-testing-loop-reports \
+/opt/frappe-testing-loop/run_daily_audit.sh
+```
+
+Cron examples are available in:
+
+```text
+examples/crontab.example
+```
+
+The script supports environment variables for `BENCH_PATH`, `APP_NAME`, `SITE_NAME`, `BASE_URL`, `ROUTES`, `ENDPOINTS`, `RUN_BENCH`, `REPORTS_DIR`, `GITHUB_ISSUE`, `GITHUB_REPO`, and `GITHUB_LABEL`.
 
 ---
 
@@ -342,6 +367,7 @@ Important flags:
 | `--html` | Write standalone HTML report |
 | `--reports-dir` | Override the base directory for automatic per-run report folders |
 | `--no-default-reports` | Disable automatic `audit.html`, `audit.json`, and `review.md` generation |
+| `--no-index` | Disable automatic `reports/index.html` update for auto report runs |
 | `--attention-file` | Write GitHub-ready issue Markdown when status is `fail`/`review` |
 | `--no-auto-attention-file` | Disable automatic `issue.md` in automatic report folders |
 | `--github-issue` | Create/update a GitHub issue through `gh` when status is `fail`/`review` |
@@ -368,6 +394,8 @@ frappe-testing-loop/
 │   ├── models.py               # Shared dataclasses
 │   └── utils.py                # Shared filesystem/string helpers
 ├── skills/                     # Canonical Agent Skill package
+├── scripts/                    # Cron/automation runner templates
+├── examples/                   # Crontab and usage examples
 ├── .claude/skills/             # Claude Code project skill
 ├── .agents/skills/             # Codex repository skill
 ├── plugins/frappe-testing-loop # Distributable plugin package

@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from frappe_testing_loop.audit import compute_score, Finding, Timing, append_results_history, build_issue_body
+from frappe_testing_loop.audit import compute_score, Finding, Timing, append_results_history, build_issue_body, write_reports_index
 
 
 class ScoreHistoryTests(unittest.TestCase):
@@ -217,6 +217,72 @@ class ScoreHistoryTests(unittest.TestCase):
             self.assertTrue(report["github_issue"]["ok"])
             self.assertTrue(report["github_issue"]["dry_run"])
             self.assertIn("requires attention", report["github_issue"]["title"])
+
+    def test_write_reports_index_builds_dashboard_from_history(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            reports_dir = Path(tmp)
+            run_dir = reports_dir / "20260710-080000-sample_app-abcd1234"
+            run_dir.mkdir()
+            (run_dir / "audit.html").write_text("<html>audit</html>")
+            report = {
+                "app": "sample_app",
+                "generated_at": "2026-07-10T08:00:00",
+                "report_dir": str(run_dir),
+                "score": {
+                    "total": 55,
+                    "status": "review",
+                    "high": 0,
+                    "warn": 1,
+                    "ponytail": 1,
+                    "guest_apis": 0,
+                    "runtime_failures": 0,
+                    "bench_failures": 0,
+                },
+            }
+            append_results_history(report, reports_dir)
+
+            index_path = write_reports_index(reports_dir)
+            html = index_path.read_text()
+
+            self.assertTrue(index_path.exists())
+            self.assertIn("Frappe Testing Loop Report Index", html)
+            self.assertIn("sample_app", html)
+            self.assertIn("status-review", html)
+            self.assertIn("audit.html", html)
+
+    def test_cli_auto_report_updates_index_html(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            bench = root / "bench"
+            app_dir = bench / "apps" / "sample_app" / "sample_app"
+            app_dir.mkdir(parents=True)
+            (app_dir / "api.py").write_text(
+                "import frappe\n\n@frappe.whitelist()\ndef ping():\n    return 'pong'\n"
+            )
+            reports_dir = root / "reports"
+
+            subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "frappe_testing_loop.audit",
+                    "--bench",
+                    str(bench),
+                    "--app",
+                    "sample_app",
+                    "--no-ponytail",
+                    "--reports-dir",
+                    str(reports_dir),
+                ],
+                cwd=Path(__file__).resolve().parents[1],
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+
+            index_path = reports_dir / "index.html"
+            self.assertTrue(index_path.exists())
+            self.assertIn("sample_app", index_path.read_text())
 
 
 if __name__ == "__main__":

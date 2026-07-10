@@ -111,6 +111,123 @@ def write_markdown_report(report: dict[str, Any], path: Path) -> None:
     path.write_text("\n".join(lines) + "\n")
 
 
+
+def read_results_history(results_tsv: Path) -> list[dict[str, str]]:
+    """Read reports/results.tsv into dictionaries, newest last."""
+    if not results_tsv.exists():
+        return []
+    lines = [line.rstrip("\n") for line in results_tsv.read_text().splitlines() if line.strip()]
+    if not lines:
+        return []
+    header = lines[0].split("\t")
+    rows: list[dict[str, str]] = []
+    for line in lines[1:]:
+        values = line.split("\t")
+        values += [""] * (len(header) - len(values))
+        rows.append(dict(zip(header, values)))
+    return rows
+
+
+def write_reports_index(reports_dir: Path, path: Path | None = None) -> Path:
+    """Write a self-contained index.html dashboard for audit report history."""
+    path = path or (reports_dir / "index.html")
+    rows = read_results_history(reports_dir / "results.tsv")
+    newest = list(reversed(rows))
+
+    def esc(value: Any) -> str:
+        return html_lib.escape("" if value is None else str(value))
+
+    def as_int(row: dict[str, str], key: str) -> int:
+        try:
+            return int(row.get(key, "0") or 0)
+        except ValueError:
+            return 0
+
+    total_runs = len(rows)
+    latest = newest[0] if newest else {}
+    latest_status = latest.get("status", "none") if latest else "none"
+    latest_score = latest.get("score", "-") if latest else "-"
+    fail_count = sum(1 for r in rows if r.get("status") == "fail")
+    review_count = sum(1 for r in rows if r.get("status") == "review")
+    pass_count = sum(1 for r in rows if r.get("status") == "pass")
+
+    points = rows[-30:]
+    max_score = max([as_int(r, "score") for r in points] + [1])
+    chart_bars = "".join(
+        f"<div class='bar status-{esc(r.get('status'))}' title='{esc(r.get('timestamp'))}: {esc(r.get('score'))}' style='height:{max(4, int((as_int(r, 'score') / max_score) * 120))}px'></div>"
+        for r in points
+    ) or "<p class='empty'>No history yet.</p>"
+
+    def report_link(row: dict[str, str], filename: str, label: str) -> str:
+        run_dir = row.get("run_dir", "")
+        if not run_dir:
+            return ""
+        try:
+            href = Path(run_dir).resolve().relative_to(reports_dir.resolve()) / filename
+        except Exception:
+            href = Path(run_dir) / filename
+        return f"<a href='{esc(href)}'>{esc(label)}</a>"
+
+    table_rows = "".join(
+        "<tr class='status-{status}'><td>{timestamp}</td><td><code>{app}</code></td><td><strong>{score}</strong></td><td><span class='pill status-{status}'>{status}</span></td><td>{high}</td><td>{warn}</td><td>{ponytail}</td><td>{guest}</td><td>{runtime}</td><td>{bench}</td><td>{links}</td></tr>".format(
+            status=esc(r.get("status")),
+            timestamp=esc(r.get("timestamp")),
+            app=esc(r.get("app")),
+            score=esc(r.get("score")),
+            high=esc(r.get("high")),
+            warn=esc(r.get("warn")),
+            ponytail=esc(r.get("ponytail")),
+            guest=esc(r.get("guest_apis")),
+            runtime=esc(r.get("runtime_failures")),
+            bench=esc(r.get("bench_failures")),
+            links=" · ".join(x for x in [report_link(r, "audit.html", "HTML"), report_link(r, "review.md", "review"), report_link(r, "issue.md", "issue")] if x),
+        )
+        for r in newest
+    ) or "<tr><td colspan='11' class='empty'>No audit runs recorded yet.</td></tr>"
+
+    html = f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frappe Testing Loop - Report Index</title>
+<style>
+:root {{ --bg:#08111f; --panel:#121a2f; --line:#24314f; --text:#e5e7eb; --muted:#94a3b8; --pass:#22c55e; --review:#f59e0b; --fail:#ef4444; }}
+* {{ box-sizing:border-box; }} body {{ margin:0; background:linear-gradient(135deg,#08111f,#111827 55%,#1e1b4b); color:var(--text); font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif; }}
+header {{ padding:32px 40px 18px; border-bottom:1px solid var(--line); background:rgba(11,16,32,.82); position:sticky; top:0; z-index:2; backdrop-filter:blur(10px); }}
+h1 {{ margin:0 0 6px; font-size:28px; }} .sub,.empty {{ color:var(--muted); }} main {{ padding:24px 40px 60px; max-width:1400px; margin:auto; }}
+.cards {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0 28px; }} .card,section {{ background:rgba(18,26,47,.88); border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,.18); }}
+.label {{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em; }} .num {{ font-size:28px; font-weight:800; margin-top:4px; }}
+.status-pass .num,.pill.status-pass,.bar.status-pass {{ color:var(--pass); }} .status-review .num,.pill.status-review,.bar.status-review {{ color:var(--review); }} .status-fail .num,.pill.status-fail,.bar.status-fail {{ color:var(--fail); }}
+.pill {{ border:1px solid currentColor; border-radius:999px; padding:2px 8px; font-weight:700; }}
+.chart {{ height:150px; display:flex; align-items:end; gap:5px; padding:18px; border:1px solid var(--line); border-radius:14px; background:#0b1222; }} .bar {{ width:16px; min-height:4px; background:currentColor; border-radius:6px 6px 0 0; opacity:.9; }}
+table {{ width:100%; border-collapse:collapse; margin-top:12px; }} th,td {{ padding:9px 10px; border-top:1px solid var(--line); text-align:left; vertical-align:top; }} th {{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.06em; background:#111c33; }}
+code {{ color:#c4b5fd; background:#0b1222; padding:2px 5px; border-radius:6px; }} a {{ color:#93c5fd; text-decoration:none; }} a:hover {{ text-decoration:underline; }}
+</style>
+</head>
+<body>
+<header>
+  <h1>Frappe Testing Loop Report Index</h1>
+  <div class="sub">Generated from <code>results.tsv</code>. Newest runs first.</div>
+</header>
+<main>
+  <div class="cards">
+    <div class="card"><div class="label">Total runs</div><div class="num">{total_runs}</div></div>
+    <div class="card status-{esc(latest_status)}"><div class="label">Latest status</div><div class="num">{esc(latest_status)}</div></div>
+    <div class="card"><div class="label">Latest score</div><div class="num">{esc(latest_score)}</div></div>
+    <div class="card status-fail"><div class="label">Fail runs</div><div class="num">{fail_count}</div></div>
+    <div class="card status-review"><div class="label">Review runs</div><div class="num">{review_count}</div></div>
+    <div class="card status-pass"><div class="label">Pass runs</div><div class="num">{pass_count}</div></div>
+  </div>
+  <section><h2>Score trend <span class="sub">last 30 runs</span></h2><div class="chart">{chart_bars}</div></section>
+  <section><h2>Runs</h2><table><thead><tr><th>Timestamp</th><th>App</th><th>Score</th><th>Status</th><th>High</th><th>Warn</th><th>Ponytail</th><th>Guest APIs</th><th>Runtime</th><th>Bench</th><th>Reports</th></tr></thead><tbody>{table_rows}</tbody></table></section>
+</main>
+</body>
+</html>
+"""
+    path.write_text(html)
+    return path
+
 def write_html_report(report: dict[str, Any], path: Path) -> None:
     def esc(value: Any) -> str:
         return html_lib.escape("" if value is None else str(value))

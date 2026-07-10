@@ -9,7 +9,7 @@ import sys
 
 from .alerts import publish_github_issue, report_needs_attention, write_attention_file
 from .models import Finding
-from .reports import write_html_report, write_markdown_report
+from .reports import write_html_report, write_markdown_report, write_reports_index
 from .runners import http_checks, run_bench
 from .scanners import scan_doctypes, scan_hooks, scan_patterns, scan_ponytail, whitelist_functions
 from .scoring import append_results_history, compute_score
@@ -35,6 +35,7 @@ def main() -> int:
     ap.add_argument("--html", type=Path, help="Write standalone human-readable HTML report")
     ap.add_argument("--reports-dir", type=Path, help="Base directory for automatic per-run report folders. Defaults to skills/frappe-testing-loop/reports")
     ap.add_argument("--no-default-reports", action="store_true", help="Do not auto-write reports when --json/--md/--html are omitted")
+    ap.add_argument("--no-index", action="store_true", help="Do not update reports/index.html for automatic report runs")
     ap.add_argument("--attention-file", type=Path, help="Write GitHub-ready issue Markdown when audit status is fail/review")
     ap.add_argument("--no-auto-attention-file", action="store_true", help="Do not auto-write issue.md inside automatic report folders")
     ap.add_argument("--github-issue", action="store_true", help="Create a GitHub issue or comment on the existing open audit issue when status is fail/review")
@@ -143,8 +144,12 @@ def main() -> int:
         write_attention_file(report, args.attention_file)
         print(f"Wrote {args.attention_file}")
     if auto_report_dir:
-        history_path = append_results_history(report, auto_report_dir.parent)
+        reports_base = auto_report_dir.parent
+        history_path = append_results_history(report, reports_base)
         print(f"Updated {history_path}")
+        if not args.no_index:
+            index_path = write_reports_index(reports_base)
+            print(f"Updated {index_path}")
 
     return 1 if report["summary"]["high"] else 0
 
