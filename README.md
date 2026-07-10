@@ -189,17 +189,37 @@ The runtime table records:
 
 Frappe Testing Loop is packaged for humans and AI coding agents.
 
+### Install as a Claude Code plugin
+
+Inside Claude Code, run these slash commands:
+
+```text
+/plugin marketplace add Venkateshvenki404224/frappe-testing-loop
+/plugin install frappe-testing-loop@frappe-testing-loop
+```
+
+Then use the plugin skill:
+
+```text
+/frappe-testing-loop:frappe-testing-loop
+```
+
+If Claude Code cannot access the private repository, authenticate GitHub first with `gh auth login` or start Claude Code with `GITHUB_TOKEN`/`GH_TOKEN` available.
+
+### Integration files
+
 | Integration | Path |
 |---|---|
-| Canonical Agent Skill | `skills/frappe-testing-loop/SKILL.md` |
+| Claude marketplace catalog | `.claude-plugin/marketplace.json` |
+| Claude plugin manifest | `plugins/frappe-testing-loop/.claude-plugin/plugin.json` |
 | Claude Code project skill | `.claude/skills/frappe-testing-loop/SKILL.md` |
+| Canonical Agent Skill | `skills/frappe-testing-loop/SKILL.md` |
 | Codex repository skill | `.agents/skills/frappe-testing-loop/SKILL.md` |
-| Claude plugin manifest | `.claude-plugin/plugin.json` |
 | Codex plugin manifest | `.codex-plugin/plugin.json` |
 | Distributable plugin folder | `plugins/frappe-testing-loop/` |
 | Generic agent instructions | `AGENTS.md` |
 
-See [`docs/agent-integrations.md`](docs/agent-integrations.md) for installation and usage details.
+See [`docs/agent-integrations.md`](docs/agent-integrations.md) for full installation and usage details.
 
 Recommended agent loop:
 

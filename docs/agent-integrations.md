@@ -38,31 +38,58 @@ audit → inspect → fix → native tests → rerun audit → report verified e
 
 ## 3. Claude Code
 
-Claude Code project skill:
+### Install as a Claude Code plugin
+
+This repository includes a Claude marketplace catalog at:
+
+```text
+.claude-plugin/marketplace.json
+```
+
+Inside Claude Code, add the marketplace and install the plugin:
+
+```text
+/plugin marketplace add Venkateshvenki404224/frappe-testing-loop
+/plugin install frappe-testing-loop@frappe-testing-loop
+```
+
+Then invoke the plugin skill:
+
+```text
+/frappe-testing-loop:frappe-testing-loop
+```
+
+If Claude Code cannot access the repository, authenticate GitHub first:
+
+```bash
+gh auth login
+# or expose a token before starting Claude Code
+export GITHUB_TOKEN=<token>
+```
+
+### Project-local skill fallback
+
+If you are already inside this repository, Claude Code can also discover the project skill directly:
 
 ```text
 .claude/skills/frappe-testing-loop/SKILL.md
 ```
 
-Claude Code can invoke it as:
+Invoke the project skill as:
 
 ```text
 /frappe-testing-loop
 ```
 
-Claude plugin manifest:
-
-```text
-.claude-plugin/plugin.json
-```
-
-Packaged plugin folder:
+### Packaged plugin layout
 
 ```text
 plugins/frappe-testing-loop/
+├── .claude-plugin/plugin.json
+└── skills/frappe-testing-loop/SKILL.md
 ```
 
-A Claude Code plugin can package skills under `skills/<skill-name>/SKILL.md`; this repo follows that structure.
+A Claude Code plugin packages skills under `skills/<skill-name>/SKILL.md`; this repo follows that structure.
 
 ## 4. Codex
 

@@ -68,6 +68,7 @@ If plugin metadata changes, validate JSON:
 ```bash
 python3 -m json.tool .codex-plugin/plugin.json
 python3 -m json.tool .claude-plugin/plugin.json
+python3 -m json.tool .claude-plugin/marketplace.json
 ```
 
 If auditing a real Frappe app, also run native Frappe tests where possible:

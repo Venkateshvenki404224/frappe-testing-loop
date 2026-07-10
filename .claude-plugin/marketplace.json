@@ -1,0 +1,18 @@
+{
+  "name": "frappe-testing-loop",
+  "owner": {
+    "name": "M Venkatesh",
+    "url": "https://github.com/Venkateshvenki404224"
+  },
+  "plugins": [
+    {
+      "name": "frappe-testing-loop",
+      "source": "./plugins/frappe-testing-loop",
+      "description": "Claude Code plugin for auditing Frappe and ERPNext apps with Frappe Testing Loop.",
+      "version": "0.1.0",
+      "author": {
+        "name": "M Venkatesh"
+      }
+    }
+  ]
+}
