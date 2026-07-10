@@ -11,7 +11,7 @@ from .alerts import publish_github_issue, report_needs_attention, write_attentio
 from .models import Finding
 from .reports import write_html_report, write_markdown_report, write_reports_index
 from .runners import http_checks, run_bench
-from .scanners import scan_doctypes, scan_hooks, scan_patterns, scan_ponytail, whitelist_functions
+from .scanners import scan_doctypes, scan_hooks, scan_official_standards, scan_patterns, scan_ponytail, whitelist_functions
 from .scoring import append_results_history, compute_score
 from .utils import create_report_run_dir, ensure_parent
 
@@ -66,6 +66,7 @@ def main() -> int:
 
     findings = []
     findings += scan_patterns(app_path, include_tests=args.include_tests)
+    findings += scan_official_standards(app_path, include_tests=args.include_tests)
     apis, f = whitelist_functions(app_path, include_tests=args.include_tests); findings += f
     doctypes, f = scan_doctypes(app_path); findings += f
     hooks, f = scan_hooks(app_path); findings += f

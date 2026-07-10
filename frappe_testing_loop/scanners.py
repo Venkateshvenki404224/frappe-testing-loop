@@ -32,6 +32,108 @@ PONYTAIL_PATTERNS = {
     "ponytail_debt": re.compile(r"(#|//)\s*ponytail:\s*(.+)", re.I),
 }
 
+def _call_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Call):
+        return _call_name(node.func)
+    if isinstance(node, ast.Attribute):
+        parent = _call_name(node.value)
+        return f"{parent}.{node.attr}" if parent else node.attr
+    if isinstance(node, ast.Name):
+        return node.id
+    return ""
+
+
+def _is_frappe_whitelist(dec: ast.AST) -> bool:
+    return _call_name(dec).startswith("frappe.whitelist")
+
+
+def _whitelist_has_methods(dec: ast.AST) -> bool:
+    return isinstance(dec, ast.Call) and any(kw.arg == "methods" for kw in dec.keywords)
+
+
+def _mutable_default_name(default: ast.AST) -> str | None:
+    if isinstance(default, ast.List):
+        return "list"
+    if isinstance(default, ast.Dict):
+        return "dict"
+    if isinstance(default, ast.Set):
+        return "set"
+    return None
+
+
+def _is_db_call_name(name: str) -> bool:
+    return name.startswith((
+        "frappe.db.get_value",
+        "frappe.db.get_all",
+        "frappe.db.get_list",
+        "frappe.db.sql",
+        "frappe.get_doc",
+        "frappe.get_all",
+        "frappe.get_list",
+    ))
+
+
+def scan_official_standards(app_path: Path, include_tests: bool = False) -> list[Finding]:
+    """Static checks derived from frappe/skills code-style and frappe-app-dev guidance."""
+    findings: list[Finding] = []
+    for path in iter_files(app_path, (".py",)):
+        if not include_tests and is_test_path(path, app_path):
+            continue
+        rel = str(path.relative_to(app_path))
+        try:
+            tree = ast.parse(path.read_text(errors="ignore"))
+        except SyntaxError:
+            continue
+
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                positional_args = list(node.args.posonlyargs) + list(node.args.args)
+                defaults = [None] * (len(positional_args) - len(node.args.defaults)) + list(node.args.defaults)
+                for arg, default in zip(positional_args, defaults):
+                    if default is None:
+                        continue
+                    mutable_type = _mutable_default_name(default)
+                    if mutable_type:
+                        findings.append(Finding("warn", "python", rel, node.lineno, f"Mutable default argument '{arg.arg}' uses {mutable_type}; use None plus an in-function default"))
+                for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults):
+                    if default is None:
+                        continue
+                    mutable_type = _mutable_default_name(default)
+                    if mutable_type:
+                        findings.append(Finding("warn", "python", rel, node.lineno, f"Mutable default argument '{arg.arg}' uses {mutable_type}; use None plus an in-function default"))
+
+                whitelist_decorators = [dec for dec in node.decorator_list if _is_frappe_whitelist(dec)]
+                if whitelist_decorators:
+                    if not any(_whitelist_has_methods(dec) for dec in whitelist_decorators):
+                        findings.append(Finding("warn", "api", rel, node.lineno, "Whitelisted method should declare allowed HTTP methods, e.g. @frappe.whitelist(methods=['GET']) or ['POST']"))
+                    for arg in positional_args + list(node.args.kwonlyargs):
+                        if arg.arg in {"self", "cls"}:
+                            continue
+                        if arg.annotation is None:
+                            findings.append(Finding("warn", "api", rel, node.lineno, f"Whitelisted method parameter '{arg.arg}' should have a type hint so Frappe can validate/cast inputs"))
+                    if node.args.vararg:
+                        findings.append(Finding("warn", "api", rel, node.lineno, "Whitelisted method should avoid *args; explicit typed parameters are safer"))
+                    if node.args.kwarg:
+                        findings.append(Finding("warn", "api", rel, node.lineno, "Whitelisted method should avoid **kwargs; explicit typed parameters are safer"))
+
+            if isinstance(node, ast.Call):
+                name = _call_name(node)
+                if name == "frappe.db.sql" and node.args:
+                    first = node.args[0]
+                    if isinstance(first, ast.JoinedStr):
+                        findings.append(Finding("high", "security", rel, node.lineno, "String-formatted SQL uses an f-string; use parameter substitution or frappe.qb"))
+                    elif isinstance(first, ast.BinOp) and isinstance(first.op, (ast.Mod, ast.Add)):
+                        findings.append(Finding("high", "security", rel, node.lineno, "String-built SQL uses interpolation/concatenation; use parameter substitution or frappe.qb"))
+                    elif isinstance(first, ast.Call) and _call_name(first.func) in {"str.format", "format"}:
+                        findings.append(Finding("high", "security", rel, node.lineno, "String-formatted SQL uses format(); use parameter substitution or frappe.qb"))
+
+            if isinstance(node, (ast.For, ast.AsyncFor, ast.While)):
+                for child in ast.walk(node):
+                    if isinstance(child, ast.Call) and _is_db_call_name(_call_name(child)):
+                        findings.append(Finding("warn", "performance", rel, child.lineno, "DB call inside loop can create N+1 queries; batch-fetch or move the query outside the loop"))
+    return findings
+
+
 def scan_patterns(app_path: Path, include_tests: bool = False) -> list[Finding]:
     findings: list[Finding] = []
     for path in iter_files(app_path, (".py",)):

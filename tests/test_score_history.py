@@ -115,7 +115,7 @@ class ScoreHistoryTests(unittest.TestCase):
             app_dir = bench / "apps" / "sample_app" / "sample_app"
             app_dir.mkdir(parents=True)
             (app_dir / "api.py").write_text(
-                "import frappe\n\n@frappe.whitelist()\ndef ping():\n    return 'pong'\n"
+                "import frappe\n\n@frappe.whitelist(methods=['GET'])\ndef ping() -> str:\n    return 'pong'\n"
             )
             reports_dir = root / "reports"
 
@@ -277,7 +277,7 @@ class ScoreHistoryTests(unittest.TestCase):
             app_dir = bench / "apps" / "sample_app" / "sample_app"
             app_dir.mkdir(parents=True)
             (app_dir / "api.py").write_text(
-                "import frappe\n\n@frappe.whitelist()\ndef ping():\n    return 'pong'\n"
+                "import frappe\n\n@frappe.whitelist(methods=['GET'])\ndef ping() -> str:\n    return 'pong'\n"
             )
             reports_dir = root / "reports"
 

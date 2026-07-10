@@ -32,6 +32,8 @@ It flags review points like:
 
 Ponytail findings are not automatic failures. They are simplification prompts.
 
+The static audit also applies first-pass official standards derived from [`frappe/skills`](https://github.com/frappe/skills), including typed whitelisted parameters, explicit whitelisted HTTP methods, mutable default arguments, string-built SQL, and DB calls inside loops.
+
 ### 3. Runtime smoke checks
 
 When a Frappe site is running, the loop can time routes and whitelisted API methods:

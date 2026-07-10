@@ -65,6 +65,14 @@ It flags review points such as:
 
 Ponytail findings are **not automatic failures**. They are prompts for simplification.
 
+It also includes an official-standards scanner derived from [`frappe/skills`](https://github.com/frappe/skills):
+
+- whitelisted method parameters should have type hints
+- whitelisted methods should declare explicit HTTP methods
+- mutable Python default arguments are flagged
+- string-built SQL is treated as high-severity security risk
+- DB calls inside loops are flagged as potential N+1 performance issues
+
 ### Runtime smoke checks
 
 When a Frappe site is running, the tool can time:
