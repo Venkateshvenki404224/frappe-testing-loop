@@ -82,6 +82,8 @@ skills/frappe-testing-loop/reports/<YYYYMMDD-HHMMSS>-<app_name>-<id>/
 └── review.md
 ```
 
+Each `audit.json` includes a deterministic `score` block. Lower is better. Hard failures dominate the score, while Ponytail findings are low-weight review prompts. The parent `reports/` folder also gets an ignored `results.tsv` history file so multiple runs can be compared without opening every report.
+
 Use `--reports-dir <path>` to override the base folder, or `--no-default-reports` to disable automatic report writing. If no server is running, omit `--base-url`, `--route`, and `--endpoint` and run a static audit first.
 
 ## Docker/container workflow

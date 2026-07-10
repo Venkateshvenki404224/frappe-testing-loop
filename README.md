@@ -130,8 +130,14 @@ The folder contains:
 
 ```text
 audit.html   # browser/AI-readable report
-audit.json   # machine-readable payload
+audit.json   # machine-readable payload with score block
 review.md    # Markdown review notes
+```
+
+The parent `reports/` folder also gets an ignored append-only history file:
+
+```text
+results.tsv  # timestamp, app, run_dir, score, status, finding counts
 ```
 
 Open the latest HTML report:
@@ -271,6 +277,7 @@ Example summary payload:
 Generated HTML reports include:
 
 - summary cards
+- quality score cards
 - runtime timings
 - high findings
 - warnings grouped by file
