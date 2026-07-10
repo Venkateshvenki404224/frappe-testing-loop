@@ -11,6 +11,18 @@ reports/*.json
 reports/*.md
 reports/*.html
 !reports/.gitkeep
+skills/frappe-testing-loop/reports/**
+!skills/frappe-testing-loop/reports/
+!skills/frappe-testing-loop/reports/.gitkeep
+.agents/skills/frappe-testing-loop/reports/**
+!.agents/skills/frappe-testing-loop/reports/
+!.agents/skills/frappe-testing-loop/reports/.gitkeep
+.claude/skills/frappe-testing-loop/reports/**
+!.claude/skills/frappe-testing-loop/reports/
+!.claude/skills/frappe-testing-loop/reports/.gitkeep
+plugins/frappe-testing-loop/skills/frappe-testing-loop/reports/**
+!plugins/frappe-testing-loop/skills/frappe-testing-loop/reports/
+!plugins/frappe-testing-loop/skills/frappe-testing-loop/reports/.gitkeep
 
 # OS/editor
 .DS_Store

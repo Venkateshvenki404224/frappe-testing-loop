@@ -27,10 +27,10 @@ Example audit:
 python3 -m frappe_testing_loop.audit \
   --bench /path/to/frappe-bench \
   --app <app_name> \
-  --site <site_name> \
-  --html reports/<app_name>-audit.html \
-  --json reports/<app_name>-audit.json
+  --site <site_name>
 ```
+
+By default this writes `audit.html`, `audit.json`, and `review.md` into a unique ignored run folder under `skills/frappe-testing-loop/reports/`.
 
 ## Agent skill
 

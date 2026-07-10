@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+from datetime import datetime
 import html as html_lib
 import json
 import os
@@ -23,6 +24,7 @@ import statistics
 import subprocess
 import sys
 import time
+import uuid
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any
@@ -93,6 +95,41 @@ def is_test_path(path: Path, root: Path) -> bool:
 
 def line_no(text: str, pos: int) -> int:
     return text.count("\n", 0, pos) + 1
+
+
+def slugify(value: str) -> str:
+    slug = re.sub(r"[^a-zA-Z0-9_.-]+", "-", value.strip()).strip("-._")
+    return slug or "app"
+
+
+def default_reports_base() -> Path:
+    """Return the default skill-local reports directory.
+
+    Prefer the path used by this repository/plugin so agents get stable, ignored
+    report history without passing --html/--json every run. Fall back to CWD for
+    editable/script copies where the repository layout is not present.
+    """
+    repo_root = Path(__file__).resolve().parents[1]
+    repo_skill_reports = repo_root / "skills" / "frappe-testing-loop" / "reports"
+    cwd_skill_reports = Path.cwd() / "skills" / "frappe-testing-loop" / "reports"
+    if cwd_skill_reports.parent.exists():
+        return cwd_skill_reports
+    if repo_skill_reports.parent.exists():
+        return repo_skill_reports
+    return cwd_skill_reports
+
+
+def create_report_run_dir(app: str, reports_dir: Path | None = None) -> Path:
+    base = reports_dir or default_reports_base()
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    unique = uuid.uuid4().hex[:8]
+    run_dir = base / f"{stamp}-{slugify(app)}-{unique}"
+    run_dir.mkdir(parents=True, exist_ok=False)
+    return run_dir
+
+
+def ensure_parent(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
 
 
 def scan_patterns(app_path: Path, include_tests: bool = False) -> list[Finding]:
@@ -521,7 +558,12 @@ def main() -> int:
     ap.add_argument("--json", type=Path, help="Write JSON report")
     ap.add_argument("--md", type=Path, help="Write human/AI-readable Markdown report")
     ap.add_argument("--html", type=Path, help="Write standalone human-readable HTML report")
+    ap.add_argument("--reports-dir", type=Path, help="Base directory for automatic per-run report folders. Defaults to skills/frappe-testing-loop/reports")
+    ap.add_argument("--no-default-reports", action="store_true", help="Do not auto-write reports when --json/--md/--html are omitted")
     args = ap.parse_args()
+
+    should_auto_write_reports = not args.no_default_reports and not (args.json or args.md or args.html)
+    auto_report_dir: Path | None = None
 
     bench = args.bench or Path.cwd()
     app_path = bench / "apps" / args.app
@@ -533,6 +575,12 @@ def main() -> int:
         else:
             print(f"ERROR: app path not found: {app_path}", file=sys.stderr)
             return 2
+
+    if should_auto_write_reports:
+        auto_report_dir = create_report_run_dir(args.app, args.reports_dir)
+        args.json = auto_report_dir / "audit.json"
+        args.md = auto_report_dir / "review.md"
+        args.html = auto_report_dir / "audit.html"
 
     findings = []
     findings += scan_patterns(app_path, include_tests=args.include_tests)
@@ -572,6 +620,8 @@ def main() -> int:
         "hooks": hooks,
         "bench_results": bench_results,
         "timings": [asdict(x) for x in timings],
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "report_dir": str(auto_report_dir) if auto_report_dir else None,
     }
 
     print(json.dumps(report["summary"], indent=2))
@@ -583,12 +633,15 @@ def main() -> int:
         print(f"[http] {t.target} ok={t.ok} status={t.status_code} avg_ms={t.elapsed_ms:.1f} error={t.error or ''}")
 
     if args.json:
+        ensure_parent(args.json)
         args.json.write_text(json.dumps(report, indent=2, default=str))
         print(f"Wrote {args.json}")
     if args.md:
+        ensure_parent(args.md)
         write_markdown_report(report, args.md)
         print(f"Wrote {args.md}")
     if args.html:
+        ensure_parent(args.html)
         write_html_report(report, args.html)
         print(f"Wrote {args.html}")
 

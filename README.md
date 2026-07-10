@@ -117,15 +117,27 @@ python3 -m frappe_testing_loop.audit \
   --site mysite.localhost \
   --base-url http://localhost:8000 \
   --route / \
-  --route /app \
-  --json reports/my-app-audit.json \
-  --html reports/my-app-audit.html
+  --route /app
 ```
 
-Open the report:
+By default, every run creates a unique ignored report folder under:
+
+```text
+skills/frappe-testing-loop/reports/<YYYYMMDD-HHMMSS>-<app>-<id>/
+```
+
+The folder contains:
+
+```text
+audit.html   # browser/AI-readable report
+audit.json   # machine-readable payload
+review.md    # Markdown review notes
+```
+
+Open the latest HTML report:
 
 ```bash
-xdg-open reports/my-app-audit.html
+xdg-open skills/frappe-testing-loop/reports/<run-folder>/audit.html
 ```
 
 ---
@@ -171,8 +183,7 @@ python3 -m frappe_testing_loop.audit \
   --password 'admin' \
   --endpoint my_app.api.get_dashboard \
   --endpoint my_app.api.list_devices \
-  --repeat 3 \
-  --html reports/api-smoke.html
+  --repeat 3
 ```
 
 The runtime table records:
@@ -295,6 +306,10 @@ Important flags:
 | `--json` | Write machine-readable JSON |
 | `--md` | Write Markdown report |
 | `--html` | Write standalone HTML report |
+| `--reports-dir` | Override the base directory for automatic per-run report folders |
+| `--no-default-reports` | Disable automatic `audit.html`, `audit.json`, and `review.md` generation |
+
+If `--json`, `--md`, and `--html` are all omitted, the CLI automatically writes all three files to a unique folder inside `skills/frappe-testing-loop/reports/`. Generated report folders are ignored by Git; only `.gitkeep` is tracked.
 
 ---
 

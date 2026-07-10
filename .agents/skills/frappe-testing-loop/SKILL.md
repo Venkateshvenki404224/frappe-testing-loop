@@ -70,12 +70,19 @@ python3 -m frappe_testing_loop.audit \
   --site <site_name> \
   --base-url http://localhost:8000 \
   --route / \
-  --route /app \
-  --json reports/<app_name>-audit.json \
-  --html reports/<app_name>-audit.html
+  --route /app
 ```
 
-If no server is running, omit `--base-url`, `--route`, and `--endpoint` and run a static audit first.
+If no `--json`, `--md`, or `--html` path is passed, the CLI automatically creates a unique ignored run folder:
+
+```text
+skills/frappe-testing-loop/reports/<YYYYMMDD-HHMMSS>-<app_name>-<id>/
+├── audit.html
+├── audit.json
+└── review.md
+```
+
+Use `--reports-dir <path>` to override the base folder, or `--no-default-reports` to disable automatic report writing. If no server is running, omit `--base-url`, `--route`, and `--endpoint` and run a static audit first.
 
 ## Docker/container workflow
 
@@ -113,8 +120,7 @@ python3 -m frappe_testing_loop.audit \
   --username Administrator \
   --password '<password>' \
   --endpoint <app_name>.api.some_method \
-  --repeat 3 \
-  --html reports/api-smoke.html
+  --repeat 3
 ```
 
 Never print or commit passwords, API keys, cookies, or generated reports containing secrets.
