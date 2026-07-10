@@ -1,28 +1,40 @@
 # Frappe Testing Loop
 
-A lightweight testing/audit loop for Frappe and ERPNext apps.
+**AI-friendly audit and validation loop for Frappe/ERPNext apps.**
 
-It scans a Frappe app, discovers whitelisted APIs, highlights risky Frappe patterns, applies a Ponytail-style simplification review, optionally checks live routes/API speed, and generates a **standalone HTML report** that both humans and AI coding agents can understand.
+Frappe Testing Loop scans a Frappe app, discovers whitelisted APIs, highlights risky framework patterns, runs optional route/API smoke checks, and generates standalone reports that are useful for both developers and AI coding agents.
 
-![Frappe Testing Loop HTML report](docs/assets/html-report-screenshot.png)
+<p align="center">
+  <img src="docs/assets/html-report-preview.png" alt="Frappe Testing Loop HTML report preview" width="760">
+</p>
+
+<p align="center">
+  <sub>Compact preview. Full report screenshots and generated reports can be opened locally as HTML.</sub>
+</p>
+
+---
 
 ## Why this exists
 
-Frappe apps are not tested well by a single command. A useful loop needs to answer multiple questions:
+Frappe apps are rarely validated well by one generic command. A useful review loop needs to answer practical questions:
 
-- Did the code introduce risky Frappe patterns?
-- Are APIs already present somewhere in the codebase?
-- Are there guest APIs?
+- Which whitelisted APIs does the app expose?
+- Are there public guest APIs?
 - Are custom APIs duplicating standard Frappe REST/resource APIs?
-- Do important routes or whitelisted methods respond?
-- How fast are routes/APIs?
-- Do native Frappe tests still pass?
-- Can a human quickly understand the result?
-- Can an AI agent inspect exact file/line findings and fix them?
+- Did code introduce risky patterns such as raw SQL, manual commits, or permission bypasses?
+- Do important routes and whitelisted methods respond?
+- Are native Frappe tests still passing?
+- Can an AI agent inspect exact file/line findings and fix issues safely?
 
-Frappe Testing Loop is meant to be that glue.
+Frappe Testing Loop provides that glue:
 
-## What it checks
+```text
+audit → inspect → fix → native tests → HTML report → repeat
+```
+
+---
+
+## Core capabilities
 
 ### Static Frappe audit
 
@@ -30,6 +42,7 @@ Frappe Testing Loop is meant to be that glue.
 - `allow_guest=True` discovery
 - duplicate whitelisted API names/paths
 - `ignore_permissions=True`
+- `ignore_mandatory=True`
 - `frappe.db.commit()` manual commits
 - raw SQL usage
 - broad `except Exception`
@@ -38,31 +51,31 @@ Frappe Testing Loop is meant to be that glue.
 - DocType JSON inventory
 - `hooks.py`, `doc_events`, and `scheduler_events`
 
-### Ponytail review layer
+### Ponytail-style simplification review
 
-Inspired by [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail), this layer asks:
+Inspired by [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail), this review layer asks:
 
 > Before writing or keeping custom code, can Frappe, Python stdlib, or existing app code already do this?
 
-It flags review points like:
+It flags review points such as:
 
-- custom `get_*`, `list_*`, `create_*`, `delete_*` APIs that might be standard Frappe resource calls
+- custom `get_*`, `list_*`, `create_*`, and `delete_*` APIs that may be replaceable by standard Frappe resource APIs
 - custom cache/retry/HTTP/JSON helpers
 - large files
 - weak `ponytail:` debt comments without revisit triggers
 
-Ponytail findings are **not automatic failures**. They are simplification prompts.
+Ponytail findings are **not automatic failures**. They are prompts for simplification.
 
 ### Runtime smoke checks
 
-When a Frappe site is running, it can time:
+When a Frappe site is running, the tool can time:
 
-- regular routes like `/` and `/app`
-- whitelisted API methods through `/api/method/<dotted.path>`
+- regular routes such as `/` and `/app`
+- whitelisted methods via `/api/method/<dotted.path>`
 
-### Native Frappe tests
+### Native Frappe test companion
 
-This tool does not replace Frappe tests. Use it with:
+This tool does **not** replace Frappe tests. Use it alongside:
 
 ```bash
 bench --site <site> set-config allow_tests true
@@ -70,22 +83,11 @@ bench --site <site> run-tests --app <app> --failfast
 bench --site <site> migrate
 ```
 
-## Agent integrations
+---
 
-Frappe Testing Loop is now packaged for AI coding agents as well as humans:
+## Installation
 
-- **Claude Code skill:** `.claude/skills/frappe-testing-loop/SKILL.md`
-- **Codex skill:** `.agents/skills/frappe-testing-loop/SKILL.md`
-- **Canonical Agent Skill:** `skills/frappe-testing-loop/SKILL.md`
-- **Claude/Codex plugin manifests:** `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`
-- **Distributable plugin folder:** `plugins/frappe-testing-loop/`
-- **Generic agent instructions:** `AGENTS.md`
-
-See [`docs/agent-integrations.md`](docs/agent-integrations.md) for installation and usage details.
-
-## Install
-
-### Run directly from source
+### Run from source
 
 ```bash
 git clone https://github.com/Venkateshvenki404224/frappe-testing-loop.git
@@ -93,7 +95,7 @@ cd frappe-testing-loop
 python3 -m frappe_testing_loop.audit --help
 ```
 
-### Optional editable install
+### Editable install
 
 ```bash
 pip install -e .
@@ -102,7 +104,9 @@ frappe-testing-loop --help
 frappe-audit --help
 ```
 
-No third-party Python dependencies are required for the current CLI.
+The current CLI has no required third-party Python dependencies.
+
+---
 
 ## Quick start: local bench
 
@@ -118,17 +122,19 @@ python3 -m frappe_testing_loop.audit \
   --html reports/my-app-audit.html
 ```
 
-Open:
+Open the report:
 
 ```bash
 xdg-open reports/my-app-audit.html
 ```
 
+---
+
 ## Quick start: Docker/Frappe container
 
-If your app files exist inside the backend container, copy the script into the container and run it there.
+If the Frappe app files exist inside a backend container, copy the audit script into the container and run it there.
 
-Example from the BenchPress dev setup:
+Example from a BenchPress-style dev setup:
 
 ```bash
 docker cp frappe_testing_loop/audit.py benchpress_backend:/tmp/frappe_app_audit.py
@@ -146,9 +152,10 @@ python3 /tmp/frappe_app_audit.py \
 '
 
 docker cp benchpress_backend:/tmp/benchpress-audit.html ./benchpress-audit.html
+docker cp benchpress_backend:/tmp/benchpress-audit.json ./benchpress-audit.json
 ```
 
-Then open `benchpress-audit.html` in your browser.
+---
 
 ## Authenticated API checks
 
@@ -176,28 +183,35 @@ The runtime table records:
 - average response time
 - error text, if any
 
-## Official Frappe test command
+---
 
-Run this after the audit:
+## AI agent integrations
 
-```bash
-bench --site <site> set-config allow_tests true
-bench --site <site> run-tests --app <app> --failfast
+Frappe Testing Loop is packaged for humans and AI coding agents.
+
+| Integration | Path |
+|---|---|
+| Canonical Agent Skill | `skills/frappe-testing-loop/SKILL.md` |
+| Claude Code project skill | `.claude/skills/frappe-testing-loop/SKILL.md` |
+| Codex repository skill | `.agents/skills/frappe-testing-loop/SKILL.md` |
+| Claude plugin manifest | `.claude-plugin/plugin.json` |
+| Codex plugin manifest | `.codex-plugin/plugin.json` |
+| Distributable plugin folder | `plugins/frappe-testing-loop/` |
+| Generic agent instructions | `AGENTS.md` |
+
+See [`docs/agent-integrations.md`](docs/agent-integrations.md) for installation and usage details.
+
+Recommended agent loop:
+
+```text
+research context → run audit → inspect report → fix smallest useful issue → run native tests → rerun audit → summarize verified evidence
 ```
 
-For Docker:
+---
 
-```bash
-docker exec <backend-container> bash -lc '
-cd /home/frappe/frappe-bench
-bench --site <site> set-config allow_tests true
-bench --site <site> run-tests --app <app> --failfast
-'
-```
+## Report output
 
-## Report meanings
-
-Example summary:
+Example summary payload:
 
 ```json
 {
@@ -223,9 +237,7 @@ Example summary:
 | `guest_apis` | Public APIs using `allow_guest=True` |
 | `doctypes` | DocTypes found in the app |
 
-## HTML report sections
-
-The generated HTML includes:
+Generated HTML reports include:
 
 - summary cards
 - runtime timings
@@ -238,27 +250,7 @@ The generated HTML includes:
 - AI remediation instructions
 - raw JSON payload
 
-## AI remediation workflow
-
-Use the HTML/JSON report as the input to an AI coding agent:
-
-1. Fix `high` findings first.
-2. Inspect exact file and line for each warning.
-3. For Ponytail findings, check whether Frappe built-ins or existing app code already solves it.
-4. Make the smallest useful change.
-5. Rerun:
-
-```bash
-python3 -m frappe_testing_loop.audit ... --html reports/latest.html
-bench --site <site> run-tests --app <app> --failfast
-bench --site <site> migrate
-```
-
-This creates the loop:
-
-```text
-audit → inspect → fix → native tests → HTML report → repeat
-```
+---
 
 ## CLI reference
 
@@ -284,9 +276,26 @@ Important flags:
 | `--md` | Write Markdown report |
 | `--html` | Write standalone HTML report |
 
+---
+
+## Project structure
+
+```text
+frappe-testing-loop/
+├── frappe_testing_loop/        # Python audit CLI
+├── skills/                     # Canonical Agent Skill package
+├── .claude/skills/             # Claude Code project skill
+├── .agents/skills/             # Codex repository skill
+├── plugins/frappe-testing-loop # Distributable plugin package
+├── docs/                       # Architecture and integration docs
+└── examples/                   # Example report output
+```
+
+---
+
 ## Project status
 
-Alpha. The framework is already useful for manual Frappe app testing, but rules will evolve based on real apps.
+Alpha. The framework is already useful for manual and agent-assisted Frappe app testing. Rules and integrations will evolve based on real-world Frappe/ERPNext apps.
 
 ## License
 
