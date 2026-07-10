@@ -79,10 +79,13 @@ If no `--json`, `--md`, or `--html` path is passed, the CLI automatically create
 skills/frappe-testing-loop/reports/<YYYYMMDD-HHMMSS>-<app_name>-<id>/
 ├── audit.html
 ├── audit.json
-└── review.md
+├── review.md
+└── issue.md      # only when status is fail/review
 ```
 
 Each `audit.json` includes a deterministic `score` block. Lower is better. Hard failures dominate the score, while Ponytail findings are low-weight review prompts. The parent `reports/` folder also gets an ignored `results.tsv` history file so multiple runs can be compared without opening every report.
+
+For scheduled loops, failed/review runs can also produce GitHub-ready alerts. Use `--attention-file <path>` to write an issue body to a specific file, or `--github-issue --github-repo <owner/repo>` to create/update one stable open GitHub issue. Existing open issues with the title `[Frappe Testing Loop] <app> audit requires attention` are commented on instead of creating duplicate daily issues.
 
 Use `--reports-dir <path>` to override the base folder, or `--no-default-reports` to disable automatic report writing. If no server is running, omit `--base-url`, `--route`, and `--endpoint` and run a static audit first.
 

@@ -132,6 +132,7 @@ The folder contains:
 audit.html   # browser/AI-readable report
 audit.json   # machine-readable payload with score block
 review.md    # Markdown review notes
+issue.md     # GitHub-ready alert body, only when status is fail/review
 ```
 
 The parent `reports/` folder also gets an ignored append-only history file:
@@ -145,6 +146,32 @@ Open the latest HTML report:
 ```bash
 xdg-open skills/frappe-testing-loop/reports/<run-folder>/audit.html
 ```
+
+---
+
+## Scheduled alerts and GitHub issues
+
+For daily cron/CI loops, let the audit write both files and GitHub issue updates:
+
+```bash
+python3 -m frappe_testing_loop.audit \
+  --bench /home/frappe/frappe-bench \
+  --app my_app \
+  --site mysite.localhost \
+  --base-url http://localhost:8000 \
+  --route /app \
+  --github-issue \
+  --github-repo owner/repo
+```
+
+Behavior:
+
+- `pass`: writes normal reports/history only.
+- `review` or `fail`: writes `issue.md` inside the run folder.
+- With `--github-issue`, creates one stable open issue titled `[Frappe Testing Loop] <app> audit requires attention`.
+- If that issue already exists, the loop comments on it instead of creating duplicate daily issues.
+
+Use `--attention-file /path/to/issue.md` to write the alert body somewhere specific without GitHub. Use `--github-dry-run` to verify the issue payload without calling `gh`.
 
 ---
 
@@ -315,6 +342,12 @@ Important flags:
 | `--html` | Write standalone HTML report |
 | `--reports-dir` | Override the base directory for automatic per-run report folders |
 | `--no-default-reports` | Disable automatic `audit.html`, `audit.json`, and `review.md` generation |
+| `--attention-file` | Write GitHub-ready issue Markdown when status is `fail`/`review` |
+| `--no-auto-attention-file` | Disable automatic `issue.md` in automatic report folders |
+| `--github-issue` | Create/update a GitHub issue through `gh` when status is `fail`/`review` |
+| `--github-repo` | Target repo for `--github-issue`, e.g. `owner/repo` |
+| `--github-label` | Comma-separated labels to apply when creating a new GitHub issue |
+| `--github-dry-run` | Build issue payload without calling GitHub |
 
 If `--json`, `--md`, and `--html` are all omitted, the CLI automatically writes all three files to a unique folder inside `skills/frappe-testing-loop/reports/`. Generated report folders are ignored by Git; only `.gitkeep` is tracked.
 

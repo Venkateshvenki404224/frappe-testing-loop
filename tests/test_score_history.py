@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from frappe_testing_loop.audit import compute_score, Finding, Timing, append_results_history
+from frappe_testing_loop.audit import compute_score, Finding, Timing, append_results_history, build_issue_body
 
 
 class ScoreHistoryTests(unittest.TestCase):
@@ -124,6 +124,99 @@ class ScoreHistoryTests(unittest.TestCase):
             self.assertIn("score", report)
             self.assertEqual(report["score"]["status"], "pass")
             self.assertTrue((reports_dir / "results.tsv").exists())
+
+    def test_build_issue_body_includes_score_and_file_lines(self):
+        report = {
+            "app": "sample_app",
+            "app_path": "/tmp/bench/apps/sample_app",
+            "generated_at": "2026-07-10T08:00:00",
+            "report_dir": "/tmp/reports/run-1",
+            "summary": {"findings": 1, "high": 0, "warn": 1, "guest_apis": 0},
+            "score": {"total": 50, "status": "review", "high": 0, "warn": 1, "guest_apis": 0, "runtime_failures": 0, "bench_failures": 0},
+            "findings": [{"severity": "warn", "category": "static", "file": "api.py", "line": 7, "message": "Review raw SQL"}],
+            "timings": [],
+            "bench_results": [],
+        }
+
+        body = build_issue_body(report)
+
+        self.assertIn("Frappe Testing Loop alert", body)
+        self.assertIn("Status: `review`", body)
+        self.assertIn("`api.py:7`", body)
+
+    def test_cli_auto_report_writes_issue_md_for_review_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            bench = root / "bench"
+            app_dir = bench / "apps" / "sample_app" / "sample_app"
+            app_dir.mkdir(parents=True)
+            (app_dir / "api.py").write_text(
+                "import frappe\n\n@frappe.whitelist()\ndef ping():\n    frappe.db.sql('select 1')\n    return 'pong'\n"
+            )
+            reports_dir = root / "reports"
+
+            subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "frappe_testing_loop.audit",
+                    "--bench",
+                    str(bench),
+                    "--app",
+                    "sample_app",
+                    "--no-ponytail",
+                    "--reports-dir",
+                    str(reports_dir),
+                ],
+                cwd=Path(__file__).resolve().parents[1],
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+
+            run_dirs = [p for p in reports_dir.iterdir() if p.is_dir()]
+            self.assertEqual(len(run_dirs), 1)
+            issue_md = run_dirs[0] / "issue.md"
+            self.assertTrue(issue_md.exists())
+            self.assertIn("Status: `review`", issue_md.read_text())
+
+    def test_cli_github_issue_dry_run_embeds_payload_in_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            bench = root / "bench"
+            app_dir = bench / "apps" / "sample_app" / "sample_app"
+            app_dir.mkdir(parents=True)
+            (app_dir / "api.py").write_text(
+                "import frappe\n\n@frappe.whitelist()\ndef ping():\n    frappe.db.sql('select 1')\n    return 'pong'\n"
+            )
+            out_json = root / "audit.json"
+
+            subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "frappe_testing_loop.audit",
+                    "--bench",
+                    str(bench),
+                    "--app",
+                    "sample_app",
+                    "--no-ponytail",
+                    "--no-default-reports",
+                    "--json",
+                    str(out_json),
+                    "--github-issue",
+                    "--github-dry-run",
+                ],
+                cwd=Path(__file__).resolve().parents[1],
+                check=True,
+                text=True,
+                capture_output=True,
+            )
+
+            report = json.loads(out_json.read_text())
+            self.assertTrue(report["github_issue"]["ok"])
+            self.assertTrue(report["github_issue"]["dry_run"])
+            self.assertIn("requires attention", report["github_issue"]["title"])
 
 
 if __name__ == "__main__":
